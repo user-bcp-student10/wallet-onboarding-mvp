@@ -109,6 +109,12 @@ Ejemplo de error (`422`):
 }
 ```
 
+## Arquitectura
+
+![Arquitectura](docs/arquitectura.png)
+
+Diagramas de secuencia y de estados en [docs/arquitectura.md](docs/arquitectura.md).
+
 ## Estructura
 
 ```
@@ -135,6 +141,7 @@ docker run --rm -p 8000:8000 wallet-onboarding-mvp
 
 ## Documentación del equipo
 
+- [Arquitectura y diagramas](docs/arquitectura.md)
 - [Supuestos, decisiones y limitaciones](docs/supuestos-y-decisiones.md)
 - [Trazabilidad criterio → implementación → prueba](docs/trazabilidad.md)
 - [Guion de la demo (5 minutos)](docs/guion-demo.md)
