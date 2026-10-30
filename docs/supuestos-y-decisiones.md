@@ -29,7 +29,7 @@ Historia **"Registro y activación del MVP de wallet"**, completa en sus 6 crite
 | DEC-3 | Un error de validación responde `422` con **todos** los campos inválidos a la vez y un mensaje en lenguaje natural por campo. | Devolver solo el primer error obliga al usuario a varios intentos. |
 | DEC-4 | Los intentos fallidos generan el evento `paso_fallido` con el código de error. | Permite ver dónde se traba la gente (sección "errores más frecuentes"). |
 | DEC-5 | Los eventos **no contienen datos personales**: solo ids técnicos, canal, paso, códigos y fechas. DNI y celular se muestran enmascarados (`*****912`). | Alineado con la Ley N.° 29733 de Protección de Datos Personales. |
-| DEC-6 | La clave se guarda con hash PBKDF2-SHA256 y sal aleatoria, nunca en texto plano. | — |
+| DEC-6 | La clave se guarda con hash PBKDF2-SHA256, sal aleatoria y pepper de `PEPPER_CLAVE` (RS-2, issue #50), nunca en texto plano. | — |
 | DEC-7 | Si la identidad no se valida, la wallet queda `RECHAZADA` y el flujo se cierra con un mensaje que indica qué hacer (ir a una agencia). | Reintentos indefinidos abren la puerta al fraude. |
 | DEC-8 | El backend sirve también el frontend: un único servicio para desplegar. | Dos despliegues separados con CORS. |
 | DEC-9 | La base de datos es un archivo JSON con escritura atómica. Los datos ficticios de 3 meses viven solo en memoria y se regeneran al arrancar. | Una base de datos real no aporta valor en una demo y complica el despliegue. |

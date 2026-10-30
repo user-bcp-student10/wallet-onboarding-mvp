@@ -75,6 +75,7 @@ uvicorn app.main:create_app --factory --reload
 | `DEMO_ENDPOINTS` | `true` | Habilita `POST /api/demo/reiniciar` |
 | `TOKEN_ANALISTA` | aleatorio | Token del rol `analista`: puede leer la analítica (RS-8) |
 | `TOKEN_ADMIN` | aleatorio | Token del rol `admin`: lee la analítica y registra gasto (RS-8) |
+| `PEPPER_CLAVE` | aleatorio | Secreto que se mezcla con la clave antes del hash (RS-2). Sin él, los hashes no sobreviven a un reinicio |
 
 Si no defines los tokens, el servidor genera uno aleatorio por rol en cada arranque y lo muestra en su consola. Para la demo, define tus propios valores ficticios:
 

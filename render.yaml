@@ -16,3 +16,6 @@ services:
         sync: false
       - key: TOKEN_ADMIN
         sync: false
+      # RS-2: secreto del hash de la clave; Render lo pide al crear el servicio.
+      - key: PEPPER_CLAVE
+        sync: false
