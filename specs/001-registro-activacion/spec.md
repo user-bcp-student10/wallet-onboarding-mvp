@@ -150,7 +150,7 @@ Escenario: Sin gasto
 | ID | Requisito | Estado |
 |---|---|---|
 | RS-1 | Los eventos analíticos no contienen datos personales (DNI, nombres, celular, clave). | Cubierto |
-| RS-2 | La clave se guarda con un hash con sal (PBKDF2-SHA256) y nunca en texto plano. | Cubierto |
+| RS-2 | La clave se guarda con un hash con sal (PBKDF2-SHA256) y un pepper (secreto fuera del almacén, variable `PEPPER_CLAVE`), y nunca en texto plano. Sin el pepper no se pueden probar candidatos contra una copia del almacén. | Cubierto |
 | RS-3 | Toda regla RN-n se valida en el servidor; la validación del cliente no la reemplaza. | Cubierto |
 | RS-4 | DNI y celular se devuelven enmascarados (solo los 3 últimos dígitos). | Cubierto |
 | RS-5 | Las respuestas de error no exponen detalles internos (trazas, rutas, consultas). | Cubierto |
@@ -177,3 +177,4 @@ Ver [docs/supuestos-y-decisiones.md](../../docs/supuestos-y-decisiones.md): SUP-
 |---|---|---|
 | v1.0 | Formalización de la spec a partir de la historia y la implementación inicial. | — |
 | v1.1 | Nuevo RS-8: autorización por rol para la analítica y el registro de gasto. | Hallazgo `H-SEC-7`, issue #53 |
+| v1.2 | RS-2: el hash de la clave incorpora un pepper externo al almacén. | Hallazgo `H-SEC-4`, issue #50 |

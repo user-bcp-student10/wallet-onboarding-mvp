@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import os
+import secrets
 import uuid
 from datetime import datetime, timezone
 from typing import Callable
@@ -33,10 +35,29 @@ def _iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).isoformat(timespec="seconds")
 
 
+_PEPPER_EFIMERO = secrets.token_bytes(32)  # Sin PEPPER_CLAVE: los hashes no sobreviven a un reinicio.
+
+
+def pepper_clave() -> bytes:
+    """RS-2: secreto fuera del almacén, desde la variable PEPPER_CLAVE."""
+    valor = os.getenv("PEPPER_CLAVE", "").strip()
+    return valor.encode() if valor else _PEPPER_EFIMERO
+
+
+def _derivar(clave: str, sal: bytes) -> bytes:
+    material = hmac.new(pepper_clave(), clave.encode(), hashlib.sha256).digest()
+    return hashlib.pbkdf2_hmac("sha256", material, sal, 200_000)
+
+
 def hash_clave(clave: str, sal: bytes | None = None) -> str:
     sal = sal or os.urandom(16)
-    digest = hashlib.pbkdf2_hmac("sha256", clave.encode(), sal, 200_000)
-    return f"pbkdf2_sha256${sal.hex()}${digest.hex()}"
+    return f"pbkdf2_sha256${sal.hex()}${_derivar(clave, sal).hex()}"
+
+
+def verificar_clave(clave: str, almacenado: str) -> bool:
+    _, sal_hex, digest_hex = almacenado.split("$")
+    candidato = _derivar(clave, bytes.fromhex(sal_hex))
+    return hmac.compare_digest(candidato.hex(), digest_hex)
 
 
 def nuevo_evento(tipo: TipoEvento, onboarding: dict, momento: datetime, **extra) -> dict:

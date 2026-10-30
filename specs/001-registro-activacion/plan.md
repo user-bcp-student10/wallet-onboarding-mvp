@@ -30,7 +30,7 @@ Detalle de componentes, secuencia y estados en [docs/arquitectura.md](../../docs
 | DEC-3 | Un 422 devuelve todos los campos inválidos a la vez. |
 | DEC-4 | Los intentos fallidos se registran como `paso_fallido`. |
 | DEC-5 | Eventos sin datos personales; DNI y celular enmascarados. |
-| DEC-6 | Hash PBKDF2-SHA256 con sal aleatoria de 16 bytes y 200,000 iteraciones. |
+| DEC-6 | Hash PBKDF2-SHA256 con sal aleatoria de 16 bytes, 200,000 iteraciones y pepper HMAC de `PEPPER_CLAVE` (RS-2). |
 | DEC-7 | Identidad no validada: wallet RECHAZADA y registro cerrado. |
 | DEC-8 | Un solo servicio sirve la API y el frontend. |
 | DEC-9 | Almacenamiento en archivo JSON; datos demo solo en memoria. |

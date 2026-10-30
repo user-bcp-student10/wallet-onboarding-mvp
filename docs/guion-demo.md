@@ -31,6 +31,6 @@ Pestaña **Analítica** (pide el token: arranca el servidor con `TOKEN_ANALISTA=
 
 ## 5. Pruebas y cierre (1 min)
 
-- Terminal: `python -m pytest -v` → **70 pruebas**, organizadas por criterio y por requisito.
+- Terminal: `python -m pytest -v` → **73 pruebas**, organizadas por criterio y por requisito.
 - `python tools/check_trazabilidad.py` y `python tools/check_contrato.py`: la spec manda, y CI falla si el código se aparta de ella.
 - `docs/supuestos-y-decisiones.md`: qué simulamos (OTP, identidad, pagos), las decisiones (por ejemplo, la definición de duración) y lo pendiente (KYC con cumplimiento, límite de intentos, autenticación).
