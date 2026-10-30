@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Épica | MVP de wallet en Perú para pagos cotidianos |
-| Estado | Aprobada para la demo · v1.0 |
+| Estado | Aprobada para la demo · v1.1 (ver Historial de cambios) |
 | Origen | **Formalizada después de la implementación** a partir de la historia, los criterios y las decisiones del equipo. Desde esta versión, la spec es la fuente de verdad: cualquier cambio de comportamiento empieza aquí. |
 | Plan | [plan.md](plan.md) · Contrato: [contracts/openapi.yaml](contracts/openapi.yaml) · Tareas: [tasks.md](tasks.md) |
 
@@ -156,6 +156,7 @@ Escenario: Sin gasto
 | RS-5 | Las respuestas de error no exponen detalles internos (trazas, rutas, consultas). | Cubierto |
 | RS-6 | El acceso a un registro debe estar ligado a una sesión autenticada del dispositivo. | **Pendiente**, fuera del MVP |
 | RS-7 | Límite de intentos para OTP y clave, con bloqueo temporal. | **Pendiente**, fuera del MVP |
+| RS-8 | La analítica (`/api/analitica/*`) exige una credencial `Authorization: Bearer <token>`. Leer requiere el rol `analista` o `admin`; registrar gasto requiere `admin`. Sin credencial válida responde 401 `NO_AUTENTICADO`; con un rol insuficiente, 403 `SIN_PERMISO`. Cada gasto guarda el rol que lo registró y la fecha. Las credenciales se configuran por variables de entorno y no se versionan. | Cubierto |
 
 ## 6. Requisitos no funcionales
 
@@ -169,3 +170,10 @@ Escenario: Sin gasto
 ## 7. Supuestos y preguntas
 
 Ver [docs/supuestos-y-decisiones.md](../../docs/supuestos-y-decisiones.md): SUP-1 a SUP-8 y PREG-1 a PREG-5.
+
+## 8. Historial de cambios
+
+| Versión | Cambio | Origen |
+|---|---|---|
+| v1.0 | Formalización de la spec a partir de la historia y la implementación inicial. | — |
+| v1.1 | Nuevo RS-8: autorización por rol para la analítica y el registro de gasto. | Hallazgo `H-SEC-7`, issue #53 |
