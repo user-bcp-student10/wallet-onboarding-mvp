@@ -14,6 +14,10 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -v
+      - name: Trazabilidad spec → pruebas
+        run: python tools/check_trazabilidad.py
+      - name: Contrato OpenAPI → API real
+        run: python tools/check_contrato.py
   docker:
     runs-on: ubuntu-latest
     steps:

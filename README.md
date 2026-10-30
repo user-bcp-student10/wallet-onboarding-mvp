@@ -29,7 +29,7 @@ Demo de la hackatón del Día 5. Implementa la historia de usuario **"Registro y
 | Backend | Python 3.12+ · FastAPI |
 | Frontend | HTML + CSS + JavaScript sin frameworks ni build, servido por el mismo backend |
 | Base de datos | Archivo JSON (`data/db.json`) o en memoria (`WALLET_DB_PATH=:memory:`) |
-| Pruebas | pytest (45 pruebas, organizadas por criterio de aceptación) |
+| Pruebas | pytest (52 pruebas: 45 por criterio de aceptación y 7 de las verificaciones SDD) |
 | Despliegue | Docker · Render (`render.yaml`) · GitHub Actions (CI) |
 
 ## Ejecutar en local
@@ -108,6 +108,28 @@ Ejemplo de error (`422`):
   ]
 }
 ```
+
+## Desarrollo guiado por especificaciones (SDD)
+
+La fuente de verdad es [`specs/001-registro-activacion/`](specs/001-registro-activacion/):
+
+| Artefacto | Contenido |
+|---|---|
+| [`spec.md`](specs/001-registro-activacion/spec.md) | Criterios CA-1 a CA-6 en Gherkin, reglas RN-n, requisitos de seguridad RS-n y no funcionales RNF-n |
+| [`plan.md`](specs/001-registro-activacion/plan.md) | Cómo se cumple la spec: capas, decisiones y verificación |
+| [`contracts/openapi.yaml`](specs/001-registro-activacion/contracts/openapi.yaml) | Contrato de la API; cada operación cita en `x-spec` los IDs que cubre |
+| [`tasks.md`](specs/001-registro-activacion/tasks.md) | Tareas enlazadas a las issues #1 a #7 |
+
+> La spec se formalizó **después** de la primera implementación. Desde esta versión, cualquier cambio de comportamiento empieza por la spec.
+
+Verificaciones automáticas (también corren en CI):
+
+```bash
+python tools/check_trazabilidad.py   # cada CA-n de la spec tiene pruebas
+python tools/check_contrato.py       # el contrato coincide con la API real
+```
+
+La revisión por roles (Architect, Backend, Frontend, Testing, Security y Chapter) la hacen los agentes del proyecto `crew-validacion-sdd`.
 
 ## Arquitectura
 

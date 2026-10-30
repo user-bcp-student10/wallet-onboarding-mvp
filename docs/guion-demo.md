@@ -31,5 +31,6 @@ Pestaña **Analítica**:
 
 ## 5. Pruebas y cierre (1 min)
 
-- Terminal: `python -m pytest -v` → **45 pruebas, organizadas por criterio**.
+- Terminal: `python -m pytest -v` → **52 pruebas**, organizadas por criterio.
+- `python tools/check_trazabilidad.py` y `python tools/check_contrato.py`: la spec manda, y CI falla si el código se aparta de ella.
 - `docs/supuestos-y-decisiones.md`: qué simulamos (OTP, identidad, pagos), las decisiones (por ejemplo, la definición de duración) y lo pendiente (KYC con cumplimiento, límite de intentos, autenticación).
