@@ -148,11 +148,38 @@ function iniciarCronometro(ob) {
   if (!fin) cronometro = setInterval(pintar, 1000);
 }
 
+const EQUIPO = [
+  ["Frank Laura", "T64645"],
+  ["Hernán Chau", "U20223"],
+  ["César Valdiviezo", "T14495"],
+  ["Raúl Aguirre", "T27136"],
+  ["Freddy Liendo", "T14972"],
+  ["Sebastian Barrios", "T51306"],
+];
+
+const iniciales = (nombre) => nombre.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+
+function tarjetaEquipo() {
+  return `
+    <section class="card equipo" aria-labelledby="titulo-equipo">
+      <h2 id="titulo-equipo">Equipo</h2>
+      <ul>
+        ${EQUIPO.map(([nombre, codigo]) => `
+          <li>
+            <span class="avatar" aria-hidden="true">${esc(iniciales(nombre))}</span>
+            <span><span class="nombre">${esc(nombre)}</span><br><span class="codigo">${esc(codigo)}</span></span>
+          </li>`).join("")}
+      </ul>
+    </section>`;
+}
+
 function vistaBienvenida(error) {
   $app.innerHTML = `
-    <div class="card">
+    <section class="portada">
       <h1>Abre tu wallet en 3 minutos</h1>
-      <p class="muted">Paga con QR y envía dinero a cualquier celular. Solo necesitas tu DNI y tu celular.</p>
+      <p>Paga con QR y envía dinero a cualquier celular. Solo necesitas tu DNI y tu celular.</p>
+    </section>
+    <div class="card">
       ${error ? `<div class="alerta alerta-error">${esc(error)}</div>` : ""}
       <form id="form-inicio" novalidate>
         <div class="campo">
@@ -171,7 +198,8 @@ function vistaBienvenida(error) {
         </ol>
         <button class="btn btn-primario" type="submit">Empezar</button>
       </form>
-    </div>`;
+    </div>
+    ${tarjetaEquipo()}`;
   document.getElementById("form-inicio").addEventListener("submit", async (e) => {
     e.preventDefault();
     const boton = e.target.querySelector("button");

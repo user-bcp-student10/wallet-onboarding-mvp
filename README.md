@@ -6,6 +6,17 @@ Demo de la hackatón del Día 5. Implementa la historia de usuario **"Registro y
 > quiero completar el onboarding de la wallet con un flujo guiado y señales claras de siguiente paso,
 > para poder empezar a pagar sin abandonar el proceso.
 
+## Equipo
+
+| Integrante | Código |
+|---|---|
+| Frank Laura | T64645 |
+| Hernán Chau | U20223 |
+| César Valdiviezo | T14495 |
+| Raúl Aguirre | T27136 |
+| Freddy Liendo | T14972 |
+| Sebastian Barrios | T51306 |
+
 | Registro guiado | Error accionable | Wallet activa | Analítica |
 |---|---|---|---|
 | ![Bienvenida](docs/capturas/01-bienvenida.png) | ![Error de DNI](docs/capturas/02-error-dni.png) | ![Wallet activa](docs/capturas/05-activa.png) | ![Analítica](docs/capturas/07-analitica.png) |
