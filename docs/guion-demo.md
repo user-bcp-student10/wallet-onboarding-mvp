@@ -24,13 +24,13 @@ Registrar otra wallet con el DNI `99999999`: la validación de identidad falla, 
 
 ## 4. Analítica (1 min)
 
-Pestaña **Analítica**:
+Pestaña **Analítica** (pide el token: arranca el servidor con `TOKEN_ANALISTA=demo-analista` y escribe `demo-analista`):
 - "Últimos eventos reales": los eventos del registro que acabamos de hacer (**CA-4**).
 - Reporte mensual con 3 meses ficticios: la mediana baja de 5.6 a 2.8 min (**CA-5**); nuevos activos y CAC por mes contra las metas (**CA-6**).
 - Embudo y errores frecuentes: el mayor abandono ocurre en la verificación del celular, lo que sugiere la siguiente mejora.
 
 ## 5. Pruebas y cierre (1 min)
 
-- Terminal: `python -m pytest -v` → **52 pruebas**, organizadas por criterio.
+- Terminal: `python -m pytest -v` → **70 pruebas**, organizadas por criterio y por requisito.
 - `python tools/check_trazabilidad.py` y `python tools/check_contrato.py`: la spec manda, y CI falla si el código se aparta de ella.
 - `docs/supuestos-y-decisiones.md`: qué simulamos (OTP, identidad, pagos), las decisiones (por ejemplo, la definición de duración) y lo pendiente (KYC con cumplimiento, límite de intentos, autenticación).

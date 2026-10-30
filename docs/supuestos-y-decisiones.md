@@ -33,6 +33,7 @@ Historia **"Registro y activación del MVP de wallet"**, completa en sus 6 crite
 | DEC-7 | Si la identidad no se valida, la wallet queda `RECHAZADA` y el flujo se cierra con un mensaje que indica qué hacer (ir a una agencia). | Reintentos indefinidos abren la puerta al fraude. |
 | DEC-8 | El backend sirve también el frontend: un único servicio para desplegar. | Dos despliegues separados con CORS. |
 | DEC-9 | La base de datos es un archivo JSON con escritura atómica. Los datos ficticios de 3 meses viven solo en memoria y se regeneran al arrancar. | Una base de datos real no aporta valor en una demo y complica el despliegue. |
+| DEC-10 | **RS-8 (issue #53):** la analítica usa tokens por rol (`analista` lee, `admin` además registra gasto) en `Authorization: Bearer`, configurados con `TOKEN_ANALISTA` y `TOKEN_ADMIN`. Si falta uno, se genera un token aleatorio por ejecución y se muestra en la consola del servidor. Cada gasto guarda `registrado_por` y `registrado_en`. | Usuarios y contraseñas (fuera del alcance del MVP); un token fijo en el código (quedaría versionado); dejar la analítica abierta (permite alterar el CAC). |
 
 ## Integraciones simuladas
 
@@ -46,7 +47,7 @@ Historia **"Registro y activación del MVP de wallet"**, completa en sus 6 crite
 
 ## Limitaciones conocidas
 
-- **No hay autenticación.** Cualquiera que conozca el id de un onboarding puede consultarlo. En producción, el id iría ligado a una sesión del dispositivo.
+- **No hay autenticación de usuarios finales** (RS-6 pendiente). Cualquiera que conozca el id de un onboarding puede consultarlo. En producción, el id iría ligado a una sesión del dispositivo. La analítica sí está protegida con tokens por rol (RS-8), pero son tokens compartidos, sin expiración ni identidad individual.
 - **El almacenamiento en JSON** no escala ni soporta varias instancias; es solo para la demo.
 - **MAU real:** el CA-6 pide nuevos usuarios activos. El MAU completo, que incluye usuarios recurrentes, necesita los eventos de pago de las otras historias.
 - **Sin límite de intentos** de OTP ni de clave (riesgo de fuerza bruta en producción).

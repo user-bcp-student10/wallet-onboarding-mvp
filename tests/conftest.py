@@ -36,9 +36,13 @@ def reloj():
 
 
 @pytest.fixture
-def client(reloj):
+def client(reloj, monkeypatch):
+    # RS-8: la analítica exige token. El cliente compartido se autentica como admin; las pruebas de
+    # acceso anónimo y por rol están en test_rs8_autorizacion_analitica.py.
+    monkeypatch.setenv("TOKEN_ANALISTA", "token-analista-de-prueba")
+    monkeypatch.setenv("TOKEN_ADMIN", "token-admin-de-prueba")
     app = create_app(store=JsonStore(), reloj=reloj, cargar_demo=False)
-    return TestClient(app)
+    return TestClient(app, headers={"Authorization": "Bearer token-admin-de-prueba"})
 
 
 @pytest.fixture

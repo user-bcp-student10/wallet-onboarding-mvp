@@ -9,7 +9,7 @@
 | CA-5 | La mediana de finalización baja de 8 a 3 minutos (meta de negocio). | `analytics.resumen` calcula la mediana de `onboarding_iniciado` a `wallet_activada` y la compara contra la meta. | `test_ca5_ca6_analitica.py` | Tarjeta "Mediana de onboarding" y columna "Mediana ≤ 3" por mes. En los datos ficticios baja de 5.6 a 2.8 min. |
 | CA-6 | Conteo mensual de nuevos usuarios activos y atribución del gasto para verificar MAU 1,000–2,000 y CAC PEN 10. | `analytics.reporte_mensual` calcula nuevos activos, gasto, CAC y desglose por canal. `POST /api/analitica/gasto` registra el gasto. | `test_ca5_ca6_analitica.py` (7 pruebas en total con CA-5) | Tabla "Reporte mensual (CA-6)". |
 
-**Total:** 52 pruebas automatizadas (`python -m pytest -v`): 45 de comportamiento, por criterio, y 7 de las verificaciones SDD (`tests/test_herramientas_sdd.py`).
+**Total:** 70 pruebas automatizadas (`python -m pytest -v`): 45 de comportamiento por criterio, 16 de autorización de la analítica (RS-8, `tests/test_rs8_autorizacion_analitica.py`), 7 de las verificaciones SDD (`tests/test_herramientas_sdd.py`) y 2 de la estructura de las skills (`tests/test_skills.py`).
 
 Esta matriz se comprueba automáticamente con `python tools/check_trazabilidad.py`, que lee los criterios de [la spec](../specs/001-registro-activacion/spec.md).
 

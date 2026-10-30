@@ -21,10 +21,12 @@ class ErrorApi extends Error {
   }
 }
 
-async function api(metodo, ruta, cuerpo) {
+async function api(metodo, ruta, cuerpo, token) {
+  const headers = cuerpo ? { "Content-Type": "application/json" } : {};
+  if (token) headers.Authorization = `Bearer ${token}`;
   const r = await fetch(ruta, {
     method: metodo,
-    headers: cuerpo ? { "Content-Type": "application/json" } : {},
+    headers,
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
   const datos = await r.json().catch(() => ({}));
@@ -336,17 +338,58 @@ function bloqueado(mensaje) {
 // ── Analítica (CA-4, CA-5, CA-6) ───────────────────────────────────────────
 let incluirDemo = true;
 
+// RS-8: la analítica exige un token de rol analista o admin. Se guarda solo en esta pestaña.
+const CLAVE_TOKEN = "wallet-analitica-token";
+const tokenAnalitica = {
+  get() { try { return sessionStorage.getItem(CLAVE_TOKEN); } catch { return null; } },
+  set(v) { try { sessionStorage.setItem(CLAVE_TOKEN, v); } catch { /* sin almacenamiento */ } },
+  del() { try { sessionStorage.removeItem(CLAVE_TOKEN); } catch { /* sin almacenamiento */ } },
+};
+
+function vistaTokenAnalitica(error) {
+  $app.innerHTML = `
+    <div class="card" style="max-width:480px;margin:0 auto">
+      <h1>Acceso a la analítica</h1>
+      <p class="muted">La analítica es solo para el equipo. Ingresa tu token de rol <code>analista</code> o <code>admin</code>.</p>
+      ${error ? `<div class="alerta alerta-error">${esc(error)}</div>` : ""}
+      <form id="form-token" novalidate>
+        ${campo("token", "Token de acceso", `<input type="password" id="token" name="token" autocomplete="off">`,
+          "Se configura con TOKEN_ANALISTA o TOKEN_ADMIN al iniciar el servidor. Si no los definiste, el servidor muestra un token temporal en su consola.")}
+        <button class="btn btn-primario" type="submit">Entrar</button>
+      </form>
+    </div>`;
+  document.getElementById("token").focus();
+  document.getElementById("form-token").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const valor = e.target.token.value.trim();
+    if (!valor) return;
+    tokenAnalitica.set(valor);
+    vistaAnalitica();
+  });
+}
+
 const marca = (ok) => (ok == null ? '<span class="chip chip-neutro">Sin datos</span>'
   : ok ? '<span class="chip chip-ok">Cumple</span>' : '<span class="chip chip-warn">No cumple</span>');
 
 async function vistaAnalitica() {
+  const token = tokenAnalitica.get();
+  if (!token) return vistaTokenAnalitica();
   $app.innerHTML = `<p class="muted">Cargando analítica…</p>`;
   const q = `incluir_demo=${incluirDemo}`;
-  const [res, mensual, eventos] = await Promise.all([
-    api("GET", `/api/analitica/onboarding?${q}`),
-    api("GET", `/api/analitica/mensual?${q}`),
-    api("GET", "/api/analitica/eventos?limite=30"),
-  ]);
+  let res, mensual, eventos;
+  try {
+    [res, mensual, eventos] = await Promise.all([
+      api("GET", `/api/analitica/onboarding?${q}`, null, token),
+      api("GET", `/api/analitica/mensual?${q}`, null, token),
+      api("GET", "/api/analitica/eventos?limite=30", null, token),
+    ]);
+  } catch (err) {
+    if (err.status === 401 || err.status === 403) {
+      tokenAnalitica.del();
+      return vistaTokenAnalitica("El token no es válido o no tiene permiso. Revísalo e inténtalo otra vez.");
+    }
+    throw err;
+  }
   const meses = mensual.meses;
   // Las tarjetas muestran el último mes cerrado; el mes en curso está incompleto.
   const mesActual = new Date().toISOString().slice(0, 7);
@@ -360,7 +403,10 @@ async function vistaAnalitica() {
         <h1>Analítica del onboarding</h1>
         <p class="muted" style="margin:0">Duración = de <code>onboarding_iniciado</code> a <code>wallet_activada</code>.</p>
       </div>
-      <label><input type="checkbox" id="chk-demo" ${incluirDemo ? "checked" : ""}> Incluir datos ficticios de 3 meses</label>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <label><input type="checkbox" id="chk-demo" ${incluirDemo ? "checked" : ""}> Incluir datos ficticios de 3 meses</label>
+        <button type="button" class="btn btn-ghost" id="btn-salir-analitica">Salir de la analítica</button>
+      </div>
     </div>
 
     <div class="kpis">
@@ -417,6 +463,7 @@ async function vistaAnalitica() {
       </div>
     </div>`;
   document.getElementById("chk-demo").addEventListener("change", (e) => { incluirDemo = e.target.checked; vistaAnalitica(); });
+  document.getElementById("btn-salir-analitica").addEventListener("click", () => { tokenAnalitica.del(); vistaTokenAnalitica(); });
 }
 
 // ── Enrutador ──────────────────────────────────────────────────────────────
