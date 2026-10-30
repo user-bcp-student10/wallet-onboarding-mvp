@@ -29,7 +29,7 @@ Demo de la hackatón del Día 5. Implementa la historia de usuario **"Registro y
 | Backend | Python 3.12+ · FastAPI |
 | Frontend | HTML + CSS + JavaScript sin frameworks ni build, servido por el mismo backend |
 | Base de datos | Archivo JSON (`data/db.json`) o en memoria (`WALLET_DB_PATH=:memory:`) |
-| Pruebas | pytest (52 pruebas: 45 por criterio de aceptación y 7 de las verificaciones SDD) |
+| Pruebas | pytest (70 pruebas: por criterio de aceptación, por requisito de seguridad, de las verificaciones SDD y de la estructura de las skills) |
 | Despliegue | Docker · Render (`render.yaml`) · GitHub Actions (CI) |
 
 ## Ejecutar en local
@@ -62,6 +62,22 @@ uvicorn app.main:create_app --factory --reload
 | `WALLET_DB_PATH` | `data/db.json` | Ruta del archivo JSON. `:memory:` para no guardar nada |
 | `DEMO_SEED` | `true` | Carga 3 meses de eventos ficticios (solo en memoria) |
 | `DEMO_ENDPOINTS` | `true` | Habilita `POST /api/demo/reiniciar` |
+| `TOKEN_ANALISTA` | aleatorio | Token del rol `analista`: puede leer la analítica (RS-8) |
+| `TOKEN_ADMIN` | aleatorio | Token del rol `admin`: lee la analítica y registra gasto (RS-8) |
+
+Si no defines los tokens, el servidor genera uno aleatorio por rol en cada arranque y lo muestra en su consola. Para la demo, define tus propios valores ficticios:
+
+```bash
+TOKEN_ANALISTA=demo-analista TOKEN_ADMIN=demo-admin uvicorn app.main:create_app --factory --reload
+```
+
+En PowerShell:
+
+```powershell
+$env:TOKEN_ANALISTA="demo-analista"; $env:TOKEN_ADMIN="demo-admin"; uvicorn app.main:create_app --factory --reload
+```
+
+La pestaña **Analítica** pide el token y lo guarda solo mientras la pestaña del navegador está abierta.
 
 ## Pruebas
 
@@ -90,10 +106,12 @@ Cada archivo cubre un criterio de aceptación. La trazabilidad completa está en
 | `POST` | `/api/onboardings/{id}/abandonar` | Cierra el flujo como abandonado |
 | `GET` | `/api/onboardings/{id}/eventos` | Eventos analíticos de ese onboarding |
 | `GET` | `/api/wallets/{wallet_id}/pagos` | Punto de entrada de pagos (`403` si la wallet no está activa) |
-| `GET` | `/api/analitica/onboarding` | Embudo, tasa de finalización y mediana. Filtros `desde`, `hasta`, `incluir_demo` |
-| `GET` | `/api/analitica/mensual` | Nuevos activos, gasto, CAC y cumplimiento de metas por mes |
-| `POST` | `/api/analitica/gasto` | Registra gasto de adquisición `{"mes": "2026-10", "canal": "referidos", "monto_pen": 500}` |
-| `GET` | `/api/analitica/eventos` | Últimos eventos registrados |
+| `GET` | `/api/analitica/onboarding` | Embudo, tasa de finalización y mediana. Filtros `desde`, `hasta`, `incluir_demo`. 🔒 analista o admin |
+| `GET` | `/api/analitica/mensual` | Nuevos activos, gasto, CAC y cumplimiento de metas por mes. 🔒 analista o admin |
+| `POST` | `/api/analitica/gasto` | Registra gasto de adquisición `{"mes": "2026-10", "canal": "referidos", "monto_pen": 500}`. 🔒 solo admin |
+| `GET` | `/api/analitica/eventos` | Últimos eventos registrados. 🔒 analista o admin |
+
+🔒 Requiere `Authorization: Bearer <token>` (RS-8). Sin token válido responde `401 NO_AUTENTICADO`; con un rol insuficiente, `403 SIN_PERMISO`.
 | `POST` | `/api/demo/reiniciar` | Borra los registros y recarga los datos ficticios |
 
 Ejemplo de error (`422`):
@@ -130,6 +148,14 @@ python tools/check_contrato.py       # el contrato coincide con la API real
 ```
 
 La revisión por roles (Architect, Backend, Frontend, Testing, Security y Chapter) la hacen los agentes del proyecto `crew-validacion-sdd`.
+
+### Skills para agentes
+
+En [`.github/skills/`](.github/skills/) hay procedimientos que los agentes (por ejemplo Copilot en modo agente) cargan solos según la tarea:
+
+| Skill | Se activa cuando… |
+|---|---|
+| [`sdd-corregir-hallazgo`](.github/skills/sdd-corregir-hallazgo/SKILL.md) | Pides resolver una issue con la etiqueta `hallazgo` ("resuelve la issue #53"). Obliga a validar el hallazgo, actualizar la spec si cambia el comportamiento, escribir primero una prueba de regresión que falle, corregir y entregar un PR con la evidencia. |
 
 ## Arquitectura
 

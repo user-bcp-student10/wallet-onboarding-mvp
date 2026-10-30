@@ -36,6 +36,9 @@ def operaciones_contrato(contrato: dict) -> dict[tuple[str, str], dict]:
 def operaciones_app() -> set[tuple[str, str]]:
     sys.path.insert(0, str(RAIZ))
     os.environ.setdefault("DEMO_ENDPOINTS", "true")
+    # Solo se leen las rutas: tokens fijos para no generar (ni mostrar) tokens temporales.
+    os.environ.setdefault("TOKEN_ANALISTA", "check-contrato")
+    os.environ.setdefault("TOKEN_ADMIN", "check-contrato-admin")
     from app.main import create_app
     from app.store import JsonStore
 

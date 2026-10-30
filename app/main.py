@@ -1,12 +1,15 @@
 """API HTTP del MVP de registro y activación de wallet."""
 from __future__ import annotations
 
+import hmac
+import logging
 import os
 import re
-from datetime import date
+import secrets
+from datetime import date, timezone
 from pathlib import Path
 
-from fastapi import Body, FastAPI, Query, Request
+from fastapi import Body, Depends, FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
@@ -47,9 +50,36 @@ def _flag(nombre: str, defecto: bool) -> bool:
     return os.getenv(nombre, str(defecto)).strip().lower() in ("1", "true", "yes", "si", "sí")
 
 
+ROLES_ANALITICA = ("analista", "admin")
+
+
+class ErrorAcceso(Exception):
+    """RS-8: 401 sin credencial válida, 403 con un rol que no alcanza."""
+
+    def __init__(self, status: int, codigo: str, mensaje: str) -> None:
+        super().__init__(mensaje)
+        self.status, self.codigo, self.mensaje = status, codigo, mensaje
+
+
+def tokens_de_analitica() -> dict[str, str]:
+    """Token por rol desde TOKEN_ANALISTA y TOKEN_ADMIN. Si falta uno, se genera al azar para esta
+    ejecución y se muestra en el log: así nunca queda abierta la analítica ni hay un valor fijo versionado."""
+    tokens = {}
+    for rol in ROLES_ANALITICA:
+        variable = f"TOKEN_{rol.upper()}"
+        valor = os.getenv(variable, "").strip()
+        if not valor:
+            valor = secrets.token_urlsafe(18)
+            logging.getLogger("uvicorn.error").warning(
+                "%s no está definido: token temporal del rol %s para esta ejecución: %s", variable, rol, valor)
+        tokens[rol] = valor
+    return tokens
+
+
 def create_app(store: JsonStore | None = None, reloj: Reloj = reloj_utc,
                cargar_demo: bool | None = None) -> FastAPI:
     store = store or JsonStore(os.getenv("WALLET_DB_PATH", "data/db.json"))
+    tokens = tokens_de_analitica()
     if cargar_demo is None:
         cargar_demo = _flag("DEMO_SEED", True)
     servicio = OnboardingService(store, reloj)
@@ -80,6 +110,28 @@ def create_app(store: JsonStore | None = None, reloj: Reloj = reloj_utc,
     async def _conflicto(_: Request, exc: Conflicto):
         status = 403 if exc.codigo == "WALLET_NO_ACTIVA" else 409
         return JSONResponse(status_code=status, content={"codigo": exc.codigo, "mensaje": exc.mensaje})
+
+    @app.exception_handler(ErrorAcceso)
+    async def _acceso(_: Request, exc: ErrorAcceso):
+        cabeceras = {"WWW-Authenticate": "Bearer"} if exc.status == 401 else None
+        return JSONResponse(status_code=exc.status, content={"codigo": exc.codigo, "mensaje": exc.mensaje},
+                            headers=cabeceras)
+
+    def requiere_rol(*permitidos: str):
+        def verificar(authorization: str | None = Header(default=None)) -> str:
+            esquema, _, token = (authorization or "").partition(" ")
+            rol = next((r for r, t in tokens.items()
+                        if esquema.lower() == "bearer" and token and hmac.compare_digest(token.strip(), t)), None)
+            if rol is None:
+                raise ErrorAcceso(401, "NO_AUTENTICADO",
+                                  "Necesitas un token de acceso a la analítica (Authorization: Bearer <token>).")
+            if rol not in permitidos:
+                raise ErrorAcceso(403, "SIN_PERMISO", f"El rol {rol} no puede realizar esta operación.")
+            return rol
+        return Depends(verificar)
+
+    puede_leer = requiere_rol(*ROLES_ANALITICA)
+    solo_admin = requiere_rol("admin")
 
     @app.exception_handler(NoEncontrado)
     async def _no_encontrado(_: Request, exc: NoEncontrado):
@@ -130,25 +182,26 @@ def create_app(store: JsonStore | None = None, reloj: Reloj = reloj_utc,
                 gastos = store.demo["gasto_adquisicion"] + gastos
             return eventos, gastos
 
-    @app.get("/api/analitica/onboarding", tags=["analitica"])
+    @app.get("/api/analitica/onboarding", tags=["analitica"], dependencies=[puede_leer])
     def resumen(desde: date | None = Query(None), hasta: date | None = Query(None),
                 incluir_demo: bool = True):
         eventos, _ = _eventos_y_gastos(incluir_demo)
         return analytics.resumen(eventos, desde, hasta)
 
-    @app.get("/api/analitica/mensual", tags=["analitica"])
+    @app.get("/api/analitica/mensual", tags=["analitica"], dependencies=[puede_leer])
     def mensual(incluir_demo: bool = True):
         eventos, gastos = _eventos_y_gastos(incluir_demo)
         return {"metas": analytics.metas(), "meses": analytics.reporte_mensual(eventos, gastos)}
 
-    @app.get("/api/analitica/eventos", tags=["analitica"])
+    @app.get("/api/analitica/eventos", tags=["analitica"], dependencies=[puede_leer])
     def ultimos_eventos(limite: int = Query(20, ge=1, le=200), incluir_demo: bool = False):
         eventos, _ = _eventos_y_gastos(incluir_demo)
         return list(reversed(eventos[-limite:]))
 
     @app.post("/api/analitica/gasto", status_code=201, tags=["analitica"])
-    def registrar_gasto(gasto: GastoAdquisicion):
-        registro = gasto.model_dump()
+    def registrar_gasto(gasto: GastoAdquisicion, rol: str = solo_admin):
+        registro = {**gasto.model_dump(), "registrado_por": rol,
+                    "registrado_en": reloj().astimezone(timezone.utc).isoformat(timespec="seconds")}
         with store.write() as db:
             db["gasto_adquisicion"].append(registro)
         return registro

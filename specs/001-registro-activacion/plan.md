@@ -13,7 +13,7 @@ Detalle de componentes, secuencia y estados en [docs/arquitectura.md](../../docs
 | Reglas | `app/domain.py` | RN-1 a RN-8, RN-12, enmascarado (RS-4) |
 | Caso de uso | `app/onboarding.py` | CA-1, CA-3, CA-4, RN-9 a RN-11, RS-1, RS-2 |
 | Analítica | `app/analytics.py` | CA-5, CA-6 |
-| API | `app/main.py` | Contrato HTTP, errores 422/409/403/404 (CA-2, RS-5) |
+| API | `app/main.py` | Contrato HTTP, errores 422/409/403/404 (CA-2, RS-5), autorización por rol de la analítica (RS-8) |
 | Frontend | `frontend/app.js` | Presentación de CA-1 a CA-3, RNF-1, RNF-2 |
 | Almacenamiento | `app/store.py` | RNF-3 |
 
@@ -34,6 +34,7 @@ Detalle de componentes, secuencia y estados en [docs/arquitectura.md](../../docs
 | DEC-7 | Identidad no validada: wallet RECHAZADA y registro cerrado. |
 | DEC-8 | Un solo servicio sirve la API y el frontend. |
 | DEC-9 | Almacenamiento en archivo JSON; datos demo solo en memoria. |
+| DEC-10 | Analítica protegida con tokens por rol (`TOKEN_ANALISTA`, `TOKEN_ADMIN`) y auditoría del gasto (RS-8, issue #53). |
 
 Justificación y alternativas en [docs/supuestos-y-decisiones.md](../../docs/supuestos-y-decisiones.md).
 
@@ -41,7 +42,7 @@ Justificación y alternativas en [docs/supuestos-y-decisiones.md](../../docs/sup
 
 | Qué | Cómo | Dónde |
 |---|---|---|
-| Comportamiento | 45 pruebas pytest, un archivo por criterio, más 7 pruebas de las propias verificaciones | `tests/` |
+| Comportamiento | Pruebas pytest: un archivo por criterio CA-n, otro por RS-8 y otro para las propias verificaciones | `tests/` |
 | Trazabilidad | Cada CA-n de la spec tiene pruebas | `python tools/check_trazabilidad.py` |
 | Contrato | Rutas del contrato = rutas de la app, y cada `x-spec` existe en la spec | `python tools/check_contrato.py` |
 | Revisión por roles | 6 agentes validadores (Architect, Backend, Frontend, Testing, Security, Chapter) | Proyecto `crew-validacion-sdd` |

@@ -11,3 +11,8 @@ services:
         value: "true"
       - key: DEMO_ENDPOINTS
         value: "true"
+      # RS-8: Render pide los valores al crear el servicio; no se versionan.
+      - key: TOKEN_ANALISTA
+        sync: false
+      - key: TOKEN_ADMIN
+        sync: false

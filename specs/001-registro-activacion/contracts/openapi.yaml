@@ -8,6 +8,14 @@ info:
     las de la app y que cada ID exista en spec.md.
 
 components:
+  securitySchemes:
+    tokenAnalitica:
+      type: http
+      scheme: bearer
+      description: >
+        RS-8. Token del rol `analista` (solo lectura) o `admin` (lectura y registro de gasto),
+        configurado con las variables de entorno TOKEN_ANALISTA y TOKEN_ADMIN.
+
   schemas:
     Error:
       type: object
@@ -94,6 +102,12 @@ components:
       content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
     NoEncontrado:
       description: Recurso inexistente.
+      content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
+    NoAutenticado:
+      description: NO_AUTENTICADO · falta el token o no es válido (RS-8).
+      content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
+    SinPermiso:
+      description: SIN_PERMISO · el rol del token no permite esta operación (RS-8).
       content: {application/json: {schema: {$ref: "#/components/schemas/Error"}}}
 
 paths:
@@ -211,37 +225,47 @@ paths:
   /api/analitica/onboarding:
     get:
       summary: Embudo, tasa de finalización y mediana
-      x-spec: [CA-5]
+      x-spec: [CA-5, RS-8]
+      security: [{tokenAnalitica: []}]
       parameters:
         - {name: desde, in: query, schema: {type: string, format: date}}
         - {name: hasta, in: query, schema: {type: string, format: date}}
         - {name: incluir_demo, in: query, schema: {type: boolean, default: true}}
       responses:
         "200": {description: Resumen con mediana_minutos, cumple_objetivo_mediana, embudo y errores_frecuentes}
+        "401": {$ref: "#/components/responses/NoAutenticado"}
+        "403": {$ref: "#/components/responses/SinPermiso"}
 
   /api/analitica/mensual:
     get:
       summary: Reporte mensual de nuevos activos, gasto y CAC
-      x-spec: [CA-5, CA-6]
+      x-spec: [CA-5, CA-6, RS-8]
+      security: [{tokenAnalitica: []}]
       parameters:
         - {name: incluir_demo, in: query, schema: {type: boolean, default: true}}
       responses:
         "200": {description: "Metas y meses: nuevos_usuarios_activos, gasto_adquisicion_pen, cac_pen (null sin gasto), cumplimiento"}
+        "401": {$ref: "#/components/responses/NoAutenticado"}
+        "403": {$ref: "#/components/responses/SinPermiso"}
 
   /api/analitica/eventos:
     get:
       summary: Últimos eventos registrados
-      x-spec: [CA-4, RS-1]
+      x-spec: [CA-4, RS-1, RS-8]
+      security: [{tokenAnalitica: []}]
       parameters:
         - {name: limite, in: query, schema: {type: integer, minimum: 1, maximum: 200, default: 20}}
         - {name: incluir_demo, in: query, schema: {type: boolean, default: false}}
       responses:
         "200": {description: Eventos más recientes primero}
+        "401": {$ref: "#/components/responses/NoAutenticado"}
+        "403": {$ref: "#/components/responses/SinPermiso"}
 
   /api/analitica/gasto:
     post:
-      summary: Registrar gasto de adquisición
-      x-spec: [CA-6, RN-12]
+      summary: Registrar gasto de adquisición (solo rol admin)
+      x-spec: [CA-6, RN-12, RS-8]
+      security: [{tokenAnalitica: []}]
       requestBody:
         required: true
         content:
@@ -254,8 +278,10 @@ paths:
                 canal: {enum: [organico, redes_sociales, referidos, campana_comercios]}
                 monto_pen: {type: number, exclusiveMinimum: 0}
       responses:
-        "201": {description: Gasto registrado}
+        "201": {description: "Gasto registrado, con registrado_por (rol) y registrado_en (fecha) para auditoría"}
         "422": {description: Datos del gasto inválidos}
+        "401": {$ref: "#/components/responses/NoAutenticado"}
+        "403": {$ref: "#/components/responses/SinPermiso"}
 
   /api/demo/reiniciar:
     post:
